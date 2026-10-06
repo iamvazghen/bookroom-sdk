@@ -1,0 +1,87 @@
+name: Bug report
+description: Something behaves differently from what the documentation promises
+labels: [bug, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please read [SECURITY.md](../blob/main/SECURITY.md)
+        first — if this is a security problem, do not file it here.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you observe? Include the exact error message.
+      placeholder: |
+        ValueError: Gemini is temporarily unavailable after safe retries
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal reproduction
+      description: The smallest code that shows the problem.
+      render: python
+      placeholder: |
+        from bookroom_sdk import Bookroom
+        room = Bookroom.from_env()
+        report = room.summarize.study_guide("book.epub")
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Which surface
+      multiple: true
+      options:
+        - Python SDK
+        - TypeScript / JavaScript SDK
+        - React bindings
+        - Next.js bindings
+        - CLI (`bookroom`)
+        - HTTP facade
+        - Packaging / install
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: describe
+    attributes:
+      label: `room.describe()` output
+      description: >
+        Safe to paste — it contains no secret values. It tells us the endpoints,
+        models and thresholds actually in effect.
+      render: json
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: "bookroom-sdk 2.0.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: book
+    attributes:
+      label: About the book
+      description: >
+        Type only. DO NOT paste book content, and do not attach the file — it may
+        be under copyright. Format, approximate page count, and whether it is
+        text-based or scanned is enough.
+      placeholder: "PDF, ~300 pages, text-based"
+    validations:
+      required: false

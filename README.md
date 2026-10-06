@@ -1,34 +1,83 @@
-# Bookroom SDK
+<div align="center">
 
-An SDK for the **Bookroom** book summarizer. It wraps every capability the
-engine has — EPUB/PDF extraction, chapter notes, the 16-section study guide,
-independent JEv review with bounded revisions, and Markdown / PDF /
-concept-map / claim-audit / manifest exports — as a library you can call
-directly, for Python, TypeScript, JavaScript, React and Next.js.
+# Bookroom
 
-**An integrator supplies only two values: the LLM API key and the JEv API key.**
-Every endpoint, model, threshold and budget is defaulted and overridable, and
-the endpoints are exported so you can point the SDK at a proxy, a self-hosted
-model, or a JEv-compatible service.
+**Turn a book into a complete, independently reviewed study guide — from any codebase.**
 
-There is no UI in this repository. Everything here is code and a CLI.
+[![npm](https://img.shields.io/npm/v/bookroom-sdk?logo=npm&label=npm)](https://www.npmjs.com/package/bookroom-sdk)
+[![PyPI](https://img.shields.io/pypi/v/bookroom-sdk?logo=pypi&color=blue&label=PyPI)](https://pypi.org/project/bookroom-sdk/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![Node](https://img.shields.io/badge/node-18%2B-green?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/typescript-strict-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/react-18%2B-61dafb?logo=react&logoColor=black)](https://react.dev/)
+[![Next.js](https://img.shields.io/badge/next.js-13%2B-black?logo=next.js&logoColor=white)](https://nextjs.org/)
+[![Code of Conduct](https://img.shields.io/badge/Code%20of%20Conduct-Contributor%20Covenant-blue)](CODE_OF_CONDUCT.md)
+[![Security](https://img.shields.io/badge/security-policy-informational)](SECURITY.md)
 
-## Layout
+`EPUB` `PDF` `Markdown` `study guide` `summarization` `LLM` `JEv review` `concept map` `RAG`
 
-| Path | What it is |
-|---|---|
-| `python/bookroom_sdk/` | Python SDK. Imports the engine in-process. Reference implementation. |
-| `src/` | TypeScript/JavaScript SDK. HTTP client, plus `react` and `next` entry points. |
-| `run_summary.py` | Full summarization cycle through the SDK. CLI, no UI. |
-| `run_baseline.py` | The same cycle through the engine's own code path, for comparison. |
-| `compare_runs.py` | Diffs two runs and reports whether anything functionally diverged. |
-| `SKILL.md` | Integration guide for AI agents. |
-| `examples/` | Runnable `react`, `nextjs`, `javascript`, `typescript` integrations. |
+</div>
+
+---
+
+## What it is
+
+Bookroom reads a book — an **EPUB or PDF** — and produces a **complete 16-section
+study guide**: thesis, argument flow, chapter-by-chapter notes with page
+locators, takeaways, quotes, glossary, FAQ, a plain-language explanation, a
+concept map, critical questions, and personal reflection prompts.
+
+Then it does the part most tools skip: an **independent reviewer (JEv) scores
+every one of the 16 sections** for faithfulness, coverage, clarity and
+structure against the source, and drives a bounded number of revisions. A weak
+score is recorded and shown, never hidden.
+
+Everything is exported: **Markdown**, **PDF**, a **concept-map graph**, a
+**claim audit**, a reproducible **manifest**, and token accounting.
+
+It is an **SDK first**. There is no UI. The engine is a library, so you decide
+where it runs.
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center"><b>Python</b></td>
+      <td align="center"><b>TypeScript</b></td>
+      <td align="center"><b>JavaScript</b></td>
+      <td align="center"><b>React</b></td>
+      <td align="center"><b>Next.js</b></td>
+    </tr>
+    <tr>
+      <td align="center">in-process, no server</td>
+      <td align="center">typed HTTP client</td>
+      <td align="center">plain ESM/CJS</td>
+      <td align="center">hooks + component</td>
+      <td align="center">actions + routes</td>
+    </tr>
+  </table>
+</div>
+
+---
+
+## The two-key rule
+
+**You supply exactly two values.** Everything else — endpoints, models,
+thresholds, budgets, retry policy — is defaulted and overridable.
+
+| Key | Required? | What it does |
+|---|---|---|
+| `GEMINI_API_KEY` | **yes** | Generation |
+| `TYPESAFE_API_KEY` | for review | JEv review. Omit it and review is skipped — and the run says so out loud |
+
+The provider keys **never reach a browser**. The TypeScript, React and Next.js
+clients talk to the Python facade, which holds the keys; clients authenticate
+with a separate **facade token** that belongs on your server. The React hook
+`useBookroomClient` throws if you try to pass a token in the browser.
+
+---
 
 ## Install
-
-The engine ships **inside** the package. There is no separate checkout, no
-`PYTHONPATH`, and no `BOOKROOM_APP_ROOT`.
 
 ### Python
 
@@ -36,17 +85,35 @@ The engine ships **inside** the package. There is no separate checkout, no
 pip install bookroom-sdk
 ```
 
-From a checkout:
+<details>
+<summary>Other Python package handlers</summary>
 
 ```bash
-pip install ./python          # or: pip install -e ./python
+# pipx — install the CLI as an app, isolated from your project
+pipx install bookroom-sdk
+bookroom --version
+
+# uv (fast; also the recommended way to contribute)
+uv pip install bookroom-sdk
+uv tool install bookroom-sdk          # CLI only
+uv add bookroom-sdk                   # into an existing uv project
+
+# poetry
+poetry add bookroom-sdk
+
+# pipenv
+pipenv install bookroom-sdk
+
+# conda / mamba
+conda install -c conda-forge bookroom-sdk     # after the feedstock exists
+# or, without a conda build:
+pip install bookroom-sdk
+
+# from source, editable, with the optional transport
+pip install -e "./python[all]"
 ```
 
-Optionally add the alternate Ollama/OpenRouter transport:
-
-```bash
-pip install "bookroom-sdk[legacy]"
-```
+</details>
 
 ### TypeScript / JavaScript
 
@@ -54,67 +121,105 @@ pip install "bookroom-sdk[legacy]"
 npm install bookroom-sdk
 ```
 
-The TS/JS client talks to the Python facade, which is part of the same
-installed package:
+<details>
+<summary>Other Node package managers</summary>
 
 ```bash
-bookroom serve --host 127.0.0.1 --port 8787 --token "$BOOKROOM_FACADE_TOKEN"
+# pnpm
+pnpm add bookroom-sdk
+
+# yarn (classic and berry)
+yarn add bookroom-sdk
+
+# bun
+bun add bookroom-sdk
+
+# Deno
+deno add npm:bookroom-sdk
+#   or in an import map:
+#   { "imports": { "bookroom-sdk": "npm:bookroom-sdk@^2" } }
+
+# npx, one-off
+npx bookroom-sdk --help
+
+# Volta / asdf pin a Node version; then plain npm add works
 ```
 
-## Configuration
+> **One registry, many clients.** `pnpm`, `yarn`, `bun` and `deno` all install
+> from the same npm registry. There is nothing separate to register for each of
+> them — they differ in resolver and cache, not in where the package lives.
 
-Copy `.env.example` to `.env` and fill it in. Only two values are required:
+</details>
 
-| Variable | Required | Purpose |
-|---|---|---|
-| `GEMINI_API_KEY` | yes | Generation. |
-| `TYPESAFE_API_KEY` | for review | JEv review. Omit to run without it. |
-| `BOOKROOM_APP_ROOT` | no | Point at an engine checkout instead of the bundled copy. |
+### With the alternate transport
 
-A real environment variable always wins over a `.env` value. The SDK reads
-`.env` from the working directory and from the engine root, so the same file
-that configures a deployment configures the SDK.
+Translation and chapter classification also run over Ollama or any
+OpenAI-compatible endpoint. That needs two extra packages:
 
-Endpoints are exported and overridable:
+```bash
+pip install "bookroom-sdk[legacy]"
+```
 
-| Variable | Default |
-|---|---|
-| `BOOKROOM_LLM_BASE_URL` | `https://generativelanguage.googleapis.com/v1beta` |
-| `BOOKROOM_LLM_MODEL` | `gemini-3.8-flash` |
-| `BOOKROOM_JEV_BASE_URL` | `https://api.typesafe.ai/v1` |
-| `BOOKROOM_JEV_MODEL` | `jev-latest` |
+### Docker
+
+```bash
+docker build -t bookroom .
+docker run --rm -v "$PWD/books:/books" -v "$PWD/out:/out" \
+  -e GEMINI_API_KEY -e TYPESAFE_API_KEY \
+  bookroom extract /books/book.pdf
+```
+
+### Verify your install in one line
+
+```bash
+bookroom --version && bookroom extract /path/to/book.epub
+```
+
+No engine checkout, no `PYTHONPATH`, no `BOOKROOM_APP_ROOT`. The engine ships
+inside the package.
+
+---
 
 ## Quickstart
 
-### Python
+### Python — 20 seconds to a PDF
 
 ```python
 from bookroom_sdk import Bookroom
 
-room = Bookroom.from_env()
+room = Bookroom.from_env()          # reads GEMINI_API_KEY / TYPESAFE_API_KEY
 
-room.check()                                  # credentials, before spending
-plan = room.summarize.preflight("book.epub")  # cost estimate + budget check
+room.check()                        # credentials, before you spend anything
+
+plan = room.summarize.preflight("book.epub")
+print(f"~{plan.estimated_llm_input_tokens:,} input tokens, "
+      f"~{plan.estimated_jev_credits:,} review credits")
+
 report = room.summarize.study_guide("book.epub")
 
-print(report.markdown.path)      # study-guide.md
-print(report.pdf.path)           # study-guide.pdf
-print(report.quality.as_dict())  # 16 categories, scores, pass counts
+print(report.markdown.path)          # study-guide.md
+print(report.pdf.path)               # study-guide.pdf
+print(report.quality.as_dict())      # 16 categories, scores, pass counts
 ```
 
-### TypeScript
+### TypeScript — long runs are jobs, not blocking calls
 
 ```ts
-import { Bookroom } from "bookroom-sdk";
+import { Bookroom, isQuotaError } from "bookroom-sdk";
 
 const room = new Bookroom({
   baseUrl: process.env.BOOKROOM_URL!,
   token: process.env.BOOKROOM_FACADE_TOKEN!,
 });
 
-const job = await room.jobs.studyGuide({ path: "book.epub" });
-const done = await room.jobs.waitFor(job.id, { timeoutMs: 900_000 });
-console.log(done.result?.quality);
+try {
+  const job = await room.jobs.studyGuide({ path: "book.epub" });
+  const done = await room.jobs.waitFor(job.id, { timeoutMs: 900_000 });
+  console.log(done.result?.quality);
+} catch (error) {
+  if (isQuotaError(error)) console.error("retry after", error.retryAfterSeconds);
+  else throw error;
+}
 ```
 
 ### React
@@ -122,19 +227,19 @@ console.log(done.result?.quality);
 ```tsx
 import { useBookroomJob, StudyGuidePanel } from "bookroom-sdk/react";
 
-function App() {
+export function Generate() {
   const job = useBookroomJob({ pollIntervalMs: 1000 });
   return <StudyGuidePanel job={job} path="book.epub" onStart={job.start} />;
 }
 ```
 
-`baseUrl` must point at **your** backend, which proxies to the facade. The
-facade token must never reach the browser.
+`baseUrl` must point at **your** backend, which proxies to the facade. A ready-made
+Express proxy is in [`examples/react/`](examples/react/).
 
 ### Next.js
 
 ```ts
-// app/actions.ts  (server only)
+// app/actions.ts — server only
 "use server";
 import { createSummarizeAction, createJobStatusAction } from "bookroom-sdk/next";
 
@@ -143,102 +248,288 @@ export const jobStatus = createJobStatusAction();
 ```
 
 The token is read from the server environment and never crosses to the client.
+See [`examples/nextjs/`](examples/nextjs/).
 
-## Running a book end to end
+### From the command line
 
-```powershell
-# through the SDK
-python run_summary.py "C:\path\to\book.pdf" --out runs\sdk --slug mybook
-
-# through the engine's own code path, for comparison
-python run_baseline.py "C:\path\to\book.pdf" --out runs\baseline --slug mybook
-
-# diff the two
-python compare_runs.py runs\sdk runs\baseline
+```bash
+bookroom check                          # verify both credentials
+bookroom guide book.epub --out ./out    # the full job
+bookroom extract book.pdf --text        # just read the structure
+bookroom serve --port 8787 --token "$TOKEN"   # the facade for other languages
 ```
 
-`run_summary.py` writes a `run-report.json` with stage timings, artifact sizes,
-format-validation results, claim counts and token usage, so two runs can be
-compared without re-reading the prose.
-
-## What a run produces
-
-1. **Preflight** — cost estimate and work-batch plan, with budget caps enforced
-   before any paid call.
-2. **Chapter notes** — one per section, with page-range or EPUB locators.
-3. **Digest** — all 15 remaining sections.
-4. **JEv review** — all 16 categories scored independently, with bounded
-   revisions. Categories still below threshold are kept with their history.
-5. **Exports** — `study-guide.md`, `study-guide.pdf`, `chapter-notes.md`,
-   `study-maps.json`, `claim-audit.json`, `manifest.json`, `usage.json`,
-   `preflight.json`, `evaluations.json`.
-
-Every stage is saved as it completes, so an interrupted or quota-paused run
-resumes from the last finished stage rather than paying twice.
-
-## The credential model
-
-The two provider keys never need to leave your deployment.
-
-- **Python** — the caller holds them in the process.
-- **Every other language** — the Python facade holds them:
-
-  ```bash
-  python -m bookroom_sdk serve --host 127.0.0.1 --port 8787 --token "$BOOKROOM_FACADE_TOKEN"
-  ```
-
-  Clients send only the facade token, and only from a server.
-
-`describe()` returns the full active configuration — endpoints, models,
-thresholds, budget caps — with no secret values in it, so it is safe to log.
-
-## Errors
-
-Python raises `BookroomError` subclasses: `ConfigError`,
-`UnsupportedSourceError`, `ExtractionError`, `BudgetExceededError`,
-`ValidationError`, `QuotaError`, `ProviderError`, `CancelledError`, `JobError`.
-TypeScript throws `BookroomError` with `code`/`status` and guards such as
-`isQuotaError`. A quota error carries `retryAfterSeconds`; re-run to resume.
-
-## Reading results honestly
-
-- `quality` reports how many of the 16 categories met the threshold. A run with
-  some below it is a legitimate outcome, not a bug.
-- `claim-audit` is **lexical overlap, not fact-checking**. Low-overlap claims are
-  flagged for a human.
-- OCR confidence is a recognition signal, not a correctness guarantee.
-- JEv scores are advisory signals, not proof that a summary is right.
+---
 
 ## For AI agents
 
-Read [`SKILL.md`](SKILL.md) before integrating. It states the credential rule,
-the required sequence (check → preflight → run → report honestly), the job
-pattern for long runs, and the failure modes to expect.
+**Give your agent this one command.** It is written to be pasted as-is and
+points at the integration guide:
 
-## Verification
+> Install and integrate the `bookroom-sdk` Python package. Before writing any
+> code, read `SKILL.md` in the installed package — it states the credential
+> rule, the required call order, the failure modes, and what a correct
+> integration looks like. The only two values you must supply are the LLM API
+> key and the JEv API key. Never put a provider key in client-side or browser
+> code.
 
-Every suite runs against the real book, with a local mock provider that speaks
-the actual Gemini and JEv wire formats, so nothing is simulated and no paid key
-is needed.
+`SKILL.md` is shipped inside the package, so it is available offline at:
+
+- Python: `python -c "import bookroom_sdk, pathlib; print(pathlib.Path(bookroom_sdk.__file__).parent / 'SKILL.md')"`
+- Node: `node -e "console.log(require.resolve('bookroom-sdk'))"`
+
+---
+
+## Configuration
+
+Copy `.env.example` to `.env`. A real environment variable always beats a file.
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `GEMINI_API_KEY` | — | **Required.** Generation. |
+| `TYPESAFE_API_KEY` | — | JEv review. Omit to skip review. |
+| `BOOKROOM_LLM_BASE_URL` | Google Generative Language | **Exported** LLM endpoint. Point at a proxy or self-hosted model. |
+| `BOOKROOM_LLM_MODEL` | `gemini-3.8-flash` | Generation model. |
+| `BOOKROOM_JEV_BASE_URL` | `https://api.typesafe.ai/v1` | **Exported** review endpoint. |
+| `BOOKROOM_JEV_MODEL` | `jev-latest` | Review model. |
+| `JEV_SCORE_THRESHOLD` | `3.5` | Pass mark on the 0–4 scale. |
+| `JEV_CONFIDENCE_THRESHOLD` | `0.55` | Minimum confidence to pass. |
+| `JEV_MAX_REVISIONS` | `2` | Revision budget per section (0–3). |
+| `MAX_ESTIMATED_LLM_INPUT_TOKENS` | `1500000` | Per-batch budget cap. |
+| `MAX_ESTIMATED_JEV_CREDITS` | `12000` | Per-batch review cap. |
+| `MIN_WORD_COUNT` | `200` | Smallest section that is summarized. |
+| `OCR_ENABLED` / `OCR_LANGUAGE` | `false` / `eng` | Scanned PDFs (needs Tesseract). |
+| `OUTPUT_DIR` | `output` | Where reports are written. |
+| `BOOKROOM_APP_ROOT` | — | **Optional.** Use an engine checkout instead of the bundled copy. |
+| `BOOKROOM_FACADE_TOKEN` | — | Token the HTTP facade requires. |
+
+`room.describe()` returns all of this with **no secret values in it** — safe to
+log or show on a status page.
+
+---
+
+## Use cases
+
+- **Reading triage** — decide whether a book is worth your time before spending
+  five hours on it, from a 10-minute digest.
+- **Study and revision** — 16 sections with a concept map, glossary and
+  reflection prompts, generated from the actual text.
+- **Research intake** — a searchable Markdown artifact per source, with page
+  locators back to the original.
+- **Course and team onboarding** — pre-read a book, then discuss the digest
+  instead of the first 40 pages.
+- **Content pipelines** — batch-convert a library of EBOOKs to structured
+  notes; the exports are machine-readable JSON as well as prose.
+- **Reading-notes systems** — Obsidian, Logseq, Notion: the Markdown and the
+  concept-map graph drop straight in.
+- **Agent memory** — a long book compressed into a few thousand tokens that fit
+  in a context window, without inventing detail.
+- **Audit trails** — every report carries a manifest: source hash, model,
+  threshold, and how many categories passed.
+- **Quality gates** — wire the review into CI so a report cannot ship below
+  threshold without a human deciding.
+- **Accessible and multilingual editions** — `--language` and the alternate
+  transport produce a study guide in another language.
+
+---
+
+## Results
+
+### What one run produces
+
+Nine artifacts, from one call:
+
+| Artifact | What it is |
+|---|---|
+| `study-guide.md` | The 16 canonical sections |
+| `study-guide.pdf` | A typeset, paginated PDF with a table of contents |
+| `chapter-notes.md` | One note per chapter, with page ranges or EPUB locators |
+| `study-maps.json` | A validated concept graph — nodes and relationships |
+| `claim-audit.json` | Every claim traced to its closest source, with overlap scores |
+| `manifest.json` | Source SHA-256, model, thresholds, categories passed |
+| `evaluations.json` | Full review history, including failures |
+| `usage.json` | Calls and tokens, for cost accounting |
+| `preflight.json` | The cost estimate and the work-batch plan |
+
+### Time saved
+
+Measured, not asserted. Pages-per-book and words-per-page come from **25 real
+books, 8,170 pages**, measured with `tools/measure_books.py`: a median of **321
+words per page** and **257 pages per book**. Reading speed and digest time are
+stated assumptions. Re-run the model yourself:
 
 ```bash
-python verify_clean_install.py          #  17 checks: fresh venv, pip install, real book
-python verify_sdk.py                    #  68 checks: extraction -> guide -> review -> exports
-python verify_facade.py                 #  40 checks: every HTTP route
-python verify_examples.py               #  15 checks: the shipped examples and CLI run
-python verify_equivalence.py <book>     #   SDK vs the engine's own code path
-python verify_typescript.py [book]      #  53 checks: compiled TS client vs the live facade
-
-npm run typecheck && npm run build && npm test   # 41 tests
+python tools/measure_books.py    # the corpus
+python tools/time_model.py       # the arithmetic
 ```
 
-`verify_clean_install.py` is the one that matters most for integrators: it
-builds a throwaway virtual environment, installs the package from source, and
-runs a complete summarization in a subprocess with **no** `BOOKROOM_APP_ROOT`,
-**no** `PYTHONPATH`, and no engine checkout anywhere on the path.
+**Per book** — a median book is 82,497 words:
+
+| | |
+|---|---|
+| Time to read it (250 wpm) | **5.5 hours** (330 min) |
+| Time with Bookroom (10 min digest + 10 min review) | **20 minutes** |
+| **Saved per book** | **≈ 5.2 hours** |
+
+**Per year**, at your habit of 10 pages a day (3,650 pages/year ≈ 14.2 books):
+
+| | |
+|---|---|
+| **Time saved per year** | **≈ 73 hours** |
+| As working days (8 h) | **≈ 9.2 days** |
+| As calendar days (24 h) | **≈ 3.1 days** |
+
+Range, because books and readers vary:
+
+| Scenario | Read time | Saved/book | Books/yr | Saved/yr |
+|---|---|---|---|---|
+| Short book, fast reader (150 pp, 300 wpm) | 2.7 h | 2.3 h | 24.3 | ≈ 57 h |
+| **Median book, average reader (257 pp, 250 wpm)** | **5.5 h** | **5.2 h** | **14.2** | **≈ 73 h** |
+| Long book, careful reader (500 pp, 200 wpm) | 13.4 h | 13.0 h | 7.3 | ≈ 95 h |
+
+**What this claim does and does not mean.** It is *replacement* time: the hours
+you would have spent reading a book you only needed summarised. It is not a
+claim that you stop reading — the books that deserve a full read still deserve
+one. The larger benefit is **coverage**: 14 books a year leave behind 14
+structured, searchable, auditable artifacts instead of 14 fading impressions.
+
+### Verification
+
+Every suite runs against a real book with a local provider mock that speaks the
+actual Gemini and JEv wire formats, so nothing is simulated and no credits are
+spent.
+
+| Suite | Checks | What it proves |
+|---|---|---|
+| `verify_clean_install.py` | 17 | A fresh venv installs the package and runs a book with no checkout, no `PYTHONPATH`, no `BOOKROOM_APP_ROOT` |
+| `verify_sdk.py` | 68 | Extraction → guide → review → every export |
+| `verify_facade.py` | 40 | Every HTTP route, auth, and error mapping |
+| `verify_examples.py` | 15 | The shipped examples and CLI actually run |
+| `verify_typescript.py` | 53 | The compiled TS client against the live facade |
+| `npm test` | 41 | ESM/CJS interop, retries, timeouts, error mapping |
+| `verify_equivalence.py` | — | The SDK and the engine's own code path produce identical artifacts and identical call counts |
+
+**Measured equivalence**: on a real book, the SDK path and the engine's own path
+produced a **100% prose match**, identical section counts, and **identical
+provider calls (16 calls / 2,322 tokens)**. The SDK is a wrapper, not a
+reimplementation.
+
+**Known limitation, stated plainly:** the end-to-end run against a **live**
+provider has not completed — the provider returned HTTP 429 with a multi-hour
+retry window. The suites prove packaging, the pipeline, the exports and wrapper
+equivalence. They do **not** yet prove summary *quality* against a live model.
+`retry_run.py` resumes from the last checkpoint when quota returns.
+
+---
+
+## How it works
+
+```
+source book (EPUB / PDF)
+        |
+        v
+   extraction ......... outline, page ranges, locators, optional Tesseract OCR
+        |
+        v
+  preflight .......... cost estimate; budget caps enforced BEFORE any paid call
+        |
+        v
+ chapter notes ....... one per chapter, each independently reviewed
+        |
+        v
+  digest ............. the remaining 15 sections, generated separately
+        |
+        v
+  quality gate ....... JEv scores all 16; bounded revisions; failures retained
+        |
+        v
+   exports ........... md, pdf, graph, claims, manifest, usage
+```
+
+Two properties that matter in production:
+
+**Checkpointing.** Every stage is saved as it completes. An interrupted or
+quota-paused run **resumes from the last finished stage** rather than paying
+twice.
+
+**Honest failure.** A category that stays below threshold is kept with its
+history. Low claim-audit overlap is flagged for a human, never auto-rejected.
+The `claim-audit` is *lexical overlap, not fact-checking* — the README will
+not pretend otherwise.
+
+---
+
+## API surface
+
+39 capabilities, reachable from every supported language.
+
+| Namespace | Python | TypeScript |
+|---|---|---|
+| Extract | `extract`, `extract_epub`, `extract_pdf`, `outline`, `ocr_languages`, `metadata` | `extract`, `metadata`, `outline` |
+| Summarize | `preflight`, `summarize_section`, `summarize_sections`, `summarize_text`, `digest`, `study_guide` | `preflight`, `summarizeSection`, `summarizeText`, `digest`, `studyGuide` |
+| Review | `evaluate`, `evaluate_section`, `report_sections`, `review_report`, `evaluations`, `manifest`, `audit_claims` | `evaluate`, `evaluateSection`, `report`, `evaluations` |
+| Export | `pdf`, `markdown`, `validate`, `render_report`, `concept_map`, `claim_audit`, `usage`, `artifacts`, `merge_markdown` | `pdf`, `markdown`, `validate`, `render`, `conceptMap`, `claimAudit`, `manifest`, `usage`, `artifacts`, `merge` |
+| Health | `check`, `check_cached` | `check`, `ping`, `describe`, `capabilities`, `sections` |
+| Jobs | checkpointed by default | `create`, `studyGuide`, `list`, `get`, `delete`, `waitFor` |
+| Legacy | `translate`, `translate_batch`, `classify_chapters`, `extract_notes` | `translate`, `translateBatch`, `classify`, `notes` |
+
+Full reference: [Python README](python/README.md) · [TypeScript README](typescript/README.md).
+
+---
+
+## Errors
+
+Python raises a stable hierarchy, so you never catch an application internal:
+
+```python
+from bookroom_sdk import errors
+
+try:
+    report = room.summarize.study_guide("scanned.pdf")
+except errors.QuotaError as exc:
+    print("resume in", exc.retry_after_seconds, "seconds")   # re-run to continue
+except errors.BudgetExceededError:
+    print("raise the cap, or split the book")
+except errors.UnsupportedSourceError as exc:
+    print("needs .pdf or .epub:", exc)
+```
+
+`ConfigError` · `UnsupportedSourceError` · `ExtractionError` ·
+`BudgetExceededError` · `ValidationError` · `QuotaError` · `ProviderError` ·
+`CancelledError` · `JobError`
+
+TypeScript throws `BookroomError` with `code` and `status`, plus guards:
+`isQuotaError`, `isBudgetExceededError`, `isUnsupportedSourceError`,
+`isExtractionFailedError`, `isProviderError`, `isUnauthorizedError`,
+`isNotFoundError`, `isTimeoutError`, `isRetryableError` and more. Retries happen
+on 429 and 5xx only, honouring `retry_after_seconds`.
+
+---
+
+## Contributing
+
+Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). The one
+rule: **never commit a credential or copyrighted book content.**
+
+```bash
+python verify_sdk.py && python verify_facade.py && npm test
+```
 
 ## Security
 
-`.env` holds real credentials and is **git-ignored** — it is never committed.
-`.env.example` is the committed template and contains no secrets. The facade
-token is a separate, non-provider credential for the HTTP surface.
+[SECURITY.md](SECURITY.md) documents the threat model. In short: provider keys
+never reach a browser, `.env` is git-ignored, and the facade's artifact download
+route is confined to the report's own directory. **The facade has no user
+authentication beyond its token** — bind it to loopback and put real
+authorization in front of it before exposing it.
+
+## License
+
+[MIT](LICENSE) © 2026 Vazghen Vardanian. Cite with [CITATION.cff](CITATION.cff).
+
+<div align="center">
+  <sub>
+    Built for people who have more books than time — and would rather know
+    which ones deserve the time.
+  </sub>
+</div>

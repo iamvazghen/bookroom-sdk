@@ -33,3 +33,8 @@ Thumbs.db
 *.log
 npm-debug.log*
 tmp-*
+
+# Python build artifacts
+python/build/
+python/dist/
+*.egg-info/

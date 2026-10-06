@@ -3,18 +3,39 @@
   "version": "2.0.0",
   "description": "SDK for the Bookroom book summarizer: EPUB/PDF extraction, complete study guides, independent JEv review, and Markdown/PDF/JSON exports. Python, TypeScript, JavaScript, React and Next.js.",
   "keywords": [
-    "bookroom",
+    "book-summary",
+    "summarizer",
     "book-summarizer",
     "study-guide",
+    "ebook",
     "epub",
     "pdf",
     "llm",
+    "gemini",
     "jev",
+    "book-review",
+    "concept-map",
+    "knowledge-extraction",
+    "reading-notes",
+    "study-notes",
+    "book-notes",
+    "document-analysis",
+    "text-extraction",
+    "ocr",
+    "rag",
+    "retrieval-augmented-generation",
+    "evaluation",
+    "quality-gate",
     "sdk",
     "react",
-    "nextjs"
+    "nextjs",
+    "nextjs-api-routes",
+    "server-actions",
+    "typescript",
+    "javascript"
   ],
   "license": "MIT",
+  "author": "Vazghen Vardanian",
   "type": "module",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -45,24 +66,49 @@
   "files": [
     "dist",
     "python",
+    "tools",
     "run_summary.py",
     "run_baseline.py",
     "compare_runs.py",
     "SKILL.md",
+    "LICENSE",
     "README.md",
-    "LICENSE"
+    "CHANGELOG.md",
+    "SECURITY.md",
+    "!python/dist",
+    "!python/build",
+    "!python/*.egg-info",
+    "!**/__pycache__",
+    "!**/*.pyc",
+    "!**/.DS_Store"
   ],
   "sideEffects": false,
   "engines": {
     "node": ">=18"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iamvazghen/bookroom-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/iamvazghen/bookroom-sdk/issues"
+  },
+  "homepage": "https://github.com/iamvazghen/bookroom-sdk#readme",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "clean": "node scripts/clean.mjs",
     "build": "npm run clean && tsc -p tsconfig.build.esm.json && tsc -p tsconfig.build.cjs.json && node scripts/finalize-dist.mjs",
     "typecheck": "tsc -p tsconfig.json",
+    "prepublishOnly": "npm run typecheck && npm run build",
     "pretest": "npm run build",
     "test": "node --test \"test/**/*.test.js\"",
-    "facade": "python -m bookroom_sdk serve --port 8787",
+    "facade": "bookroom serve --port 8787",
+    "verify:python": "python verify_sdk.py && python verify_facade.py && python verify_examples.py",
+    "verify:clean-install": "python verify_clean_install.py",
+    "verify:ts": "python verify_typescript.py",
     "example:typescript": "node --experimental-strip-types examples/typescript/src/study-guide.ts",
     "example:javascript": "node examples/javascript/src/study-guide.mjs"
   },

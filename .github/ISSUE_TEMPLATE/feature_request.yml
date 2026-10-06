@@ -1,0 +1,42 @@
+name: Feature request
+description: Suggest a capability or an improvement
+labels: [enhancement, needs-triage]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you unable to do today? Describe the situation, not the solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like instead
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Which surface does this apply to
+      multiple: true
+      options:
+        - Python SDK
+        - TypeScript / JavaScript SDK
+        - React bindings
+        - Next.js bindings
+        - CLI (`bookroom`)
+        - HTTP facade
+        - Exports / artifacts
+        - Core pipeline
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+    validations:
+      required: false

@@ -53,4 +53,4 @@ packages = ["bookroom_sdk"]
 # The engine is data, not a subpackage: it is imported by bare top-level name
 # (the upstream modules do `from book_pipeline import ...`), so the SDK puts
 # this directory on sys.path at load time. It must ship inside the wheel.
-bookroom_sdk = ["_engine/*.py", "_engine/PROVENANCE.md", "py.typed"]
+bookroom_sdk = ["_engine/*.py", "_engine/PROVENANCE.md", "py.typed", "LICENSE.txt"]

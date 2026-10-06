@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+title: "Bookroom"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - family-names: Vardanian
+    given-names: Vazghen
+repository-code: "https://github.com/iamvazghen/bookroom-sdk"
+url: "https://github.com/iamvazghen/bookroom-sdk"
+license: MIT
+version: 2.0.0
+date-released: "2026-10-06"
+abstract: >-
+  An SDK that turns EPUB and PDF books into complete, independently reviewed
+  study guides, and exports them as Markdown, PDF, a concept-map graph, a
+  claim audit and a reproducible manifest. Ships for Python, TypeScript,
+  JavaScript, React and Next.js.
+keywords:
+  - summarization
+  - study-guide
+  - ebook
+  - epub
+  - pdf
+  - llm
+  - retrieval-augmented-generation
+  - evaluation
+  - sdk
