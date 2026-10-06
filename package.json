@@ -1,0 +1,89 @@
+{
+  "name": "bookroom-sdk",
+  "version": "1.0.0",
+  "description": "SDK for the Bookroom book summarizer: EPUB/PDF extraction, complete study guides, independent JEv review, and Markdown/PDF/JSON exports. Python, TypeScript, JavaScript, React and Next.js.",
+  "keywords": [
+    "bookroom",
+    "book-summarizer",
+    "study-guide",
+    "epub",
+    "pdf",
+    "llm",
+    "jev",
+    "sdk",
+    "react",
+    "nextjs"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": {
+        "import": "./dist/esm/index.d.ts",
+        "require": "./dist/cjs/index.d.ts",
+        "default": "./dist/esm/index.d.ts"
+      },
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/esm/index.js"
+    },
+    "./react": {
+      "types": "./dist/esm/react.d.ts",
+      "import": "./dist/esm/react.js",
+      "default": "./dist/esm/react.js"
+    },
+    "./next": {
+      "types": "./dist/esm/next.d.ts",
+      "import": "./dist/esm/next.js",
+      "default": "./dist/esm/next.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "python",
+    "run_summary.py",
+    "run_baseline.py",
+    "compare_runs.py",
+    "SKILL.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "clean": "node scripts/clean.mjs",
+    "build": "npm run clean && tsc -p tsconfig.build.esm.json && tsc -p tsconfig.build.cjs.json && node scripts/finalize-dist.mjs",
+    "typecheck": "tsc -p tsconfig.json",
+    "pretest": "npm run build",
+    "test": "node --test \"test/**/*.test.js\"",
+    "facade": "python -m bookroom_sdk serve --port 8787",
+    "example:typescript": "node --experimental-strip-types examples/typescript/src/study-guide.ts",
+    "example:javascript": "node examples/javascript/src/study-guide.mjs"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.9.2"
+  }
+}

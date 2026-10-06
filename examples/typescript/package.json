@@ -1,0 +1,23 @@
+{
+  "name": "bookroom-example-typescript",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Typed Node script: describe, preflight, run a study guide job, print the report.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/study-guide.js",
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\""
+  },
+  "dependencies": {
+    "bookroom-sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  }
+}

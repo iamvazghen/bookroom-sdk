@@ -1,0 +1,35 @@
+# Secrets and credentials — never commit
+.env
+.env.local
+.env.*.local
+
+# Generated output (every run directory this project produces)
+runs/
+runs-*/
+runs_clean/
+output/
+outputs/
+dist/
+build/
+*.log
+
+# Dependencies
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Logs and scratch
+*.log
+npm-debug.log*
+tmp-*

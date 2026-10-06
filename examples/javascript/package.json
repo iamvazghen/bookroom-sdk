@@ -1,0 +1,21 @@
+{
+  "name": "bookroom-example-javascript",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Plain ESM script with JSDoc types: describe, preflight, run a study guide job, print the report.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/study-guide.mjs",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "bookroom-sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  }
+}

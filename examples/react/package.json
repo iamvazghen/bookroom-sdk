@@ -1,0 +1,30 @@
+{
+  "name": "bookroom-example-react",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Vite + React app driving the bookroom-sdk React bindings through a token-holding Node proxy.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "proxy": "node server.mjs",
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json --noEmit && vite build",
+    "serve": "npm run build && node server.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "bookroom-sdk": "^1.0.0",
+    "express": "^4.21.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0"
+  }
+}
