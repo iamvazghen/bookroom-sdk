@@ -5,7 +5,11 @@ import hashlib
 import json
 from pathlib import Path
 
-from gemini_provider import MODEL
+import gemini_provider
+# Read through the module rather than `from ... import MODEL`: the endpoint and
+# model are patched after this module is imported, so a value captured at import
+# time would record provenance that is not what actually served the request.
+from gemini_provider import provider_label
 
 
 def write_manifest(report_path: Path, source_path: Path, *, jev_enabled: bool) -> Path:
@@ -28,8 +32,8 @@ def write_manifest(report_path: Path, source_path: Path, *, jev_enabled: bool) -
         "source_file": source_path.name,
         "source_sha256": digest.hexdigest(),
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "generation_provider": "Google Gemini API",
-        "generation_model": MODEL,
+        "generation_provider": provider_label(),
+        "generation_model": gemini_provider.MODEL,
         "jev_evaluation_enabled": jev_enabled,
         "report_section_categories_evaluated": evaluations.get("report_section_count", 0),
         "report_section_categories_passed": passed,

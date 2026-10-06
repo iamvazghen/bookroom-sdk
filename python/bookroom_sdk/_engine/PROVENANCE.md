@@ -52,6 +52,23 @@ room = Bookroom.from_env(app_root=r"D:\path\to\engine\src")
 `room.app_root` reports which engine is actually loaded, and
 `room.describe()["config"]["app_root"]` is safe to log.
 
+## Documented deviations from upstream
+
+Two files are **not** byte-identical to the application, because the
+application hardcodes values that become wrong as soon as the endpoint is
+redirected:
+
+| File | Change | Why |
+|---|---|---|
+| `gemini_provider.py` | added `provider_label()`; `create_usage_report()` calls it | the provider string was the literal `"Google Gemini API"`, so a report generated through a bridge to another provider recorded provenance that was not true |
+| `report_manifest.py` | reads `gemini_provider.MODEL` and `provider_label()` at write time instead of `from ... import MODEL` | the model and provider are patched after this module is imported, so a value captured at import time went stale and the manifest could name a model that did not serve the request |
+
+This was found by a real end-to-end run against MiniMax: the manifest said
+`"Google Gemini API"` for a report MiniMax produced. `verify_provenance.py`
+covers all of it and needs no provider call.
+
+The other 17 files remain unmodified, so an engine upgrade is still a file copy.
+
 ## Updating
 
 Replace the files, then run the SDK's verification suites before committing:

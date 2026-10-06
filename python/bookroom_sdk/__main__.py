@@ -70,6 +70,15 @@ def _cmd_extract(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_bridge(args: argparse.Namespace) -> int:
+    """Run the Gemini<->OpenAI wire bridge for a non-Google provider."""
+    from .wire_bridge import serve_bridge
+
+    serve_bridge(upstream=args.upstream, model=args.model, host=args.host,
+                 port=args.port, api_key_env=args.key_env, verbose=not args.quiet)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="bookroom_sdk",
@@ -90,6 +99,19 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("check", help="Verify LLM and JEv credentials").set_defaults(func=_cmd_check)
     sub.add_parser("describe", help="Print the active configuration and capabilities").set_defaults(
         func=_cmd_describe)
+
+    bridge_parser = sub.add_parser(
+        "bridge",
+        help="Translate Gemini-shaped calls to an OpenAI-compatible provider (MiniMax, OpenRouter, vLLM)")
+    bridge_parser.add_argument("--upstream", required=True,
+                                help="OpenAI-compatible base URL, e.g. https://api.minimax.io/v1")
+    bridge_parser.add_argument("--model", required=True, help="Upstream model name")
+    bridge_parser.add_argument("--host", default="127.0.0.1")
+    bridge_parser.add_argument("--port", type=int, default=8899)
+    bridge_parser.add_argument("--key-env", default="BOOKROOM_BRIDGE_KEY",
+                                help="Fallback environment variable for the upstream key")
+    bridge_parser.add_argument("--quiet", action="store_true")
+    bridge_parser.set_defaults(func=_cmd_bridge)
 
     guide_parser = sub.add_parser("guide", help="Generate a complete study guide")
     guide_parser.add_argument("source")

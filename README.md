@@ -150,6 +150,35 @@ deno add "github:iamvazghen/bookroom-sdk"
 
 </details>
 
+### Talking to a non-Google provider
+
+The engine speaks Google's `:generateContent` dialect. Many providers —
+MiniMax, OpenRouter, vLLM, Together — speak OpenAI's `/chat/completions`
+instead, so redirecting the endpoint at one of those returns 404: the *shapes*
+differ, not only the host. The SDK ships a bridge that translates both ways:
+
+```bash
+bookroom bridge \
+  --upstream https://api.minimax.io/v1 \
+  --model MiniMax-Text-01
+```
+
+Then point the SDK at it and keep your key out of the SDK's own config:
+
+```bash
+export BOOKROOM_LLM_BASE_URL=http://127.0.0.1:8899
+export GEMINI_API_KEY=$MINIMAX_API_KEY
+```
+
+The bridge forwards the `x-goog-api-key` header as an upstream bearer token,
+rebuilds a Gemini-shaped response with token accounting, strips `<think>`
+reasoning blocks that reasoning models put inside `content`, and widens the
+upstream token allowance so reasoning cannot consume the whole answer budget
+(`BOOKROOM_BRIDGE_TOKEN_MULTIPLIER`, default 3).
+
+Prefer a non-reasoning model for this workload. A reasoning model will happily
+spend an entire small `maxOutputTokens` on chain-of-thought and return no answer.
+
 ### With the alternate transport
 
 Translation and chapter classification also run over Ollama or any

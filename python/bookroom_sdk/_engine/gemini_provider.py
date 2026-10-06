@@ -36,8 +36,35 @@ def usage_snapshot() -> dict:
     return dict(_current())
 
 
+def provider_label() -> str:
+    """Name the service that is actually serving requests.
+
+    The provider is no longer always Google: the SDK can point BASE_URL at any
+    OpenAI-compatible endpoint through a wire bridge, and a manifest that still
+    claimed "Google Gemini API" would record provenance that is not true.
+    """
+    base = (BASE_URL or "").lower()
+    for marker, name in (
+        ("googleapis.com", "Google Gemini API"),
+        ("generativelanguage", "Google Gemini API"),
+        ("minimax", "MiniMax"),
+        ("openrouter.ai", "OpenRouter"),
+        ("127.0.0.1", "local wire bridge"),
+        ("localhost", "local wire bridge"),
+    ):
+        if marker in base:
+            return name
+    return "OpenAI-compatible endpoint"
+
+
+PROVIDER = provider_label()
+
+
 def create_usage_report() -> dict:
-    return {"schema_version": "1.0", "provider": "Google Gemini API", "model": MODEL, **usage_snapshot()}
+    # Resolved at call time: BASE_URL and MODEL are patched after this module is
+    # imported, so a value captured at import time would be stale.
+    return {"schema_version": "1.0", "provider": provider_label(), "model": MODEL,
+            **usage_snapshot()}
 
 
 def reset_usage() -> None:
