@@ -6,6 +6,7 @@
 
 [![npm](https://img.shields.io/npm/v/bookroom-sdk?logo=npm&label=npm)](https://www.npmjs.com/package/bookroom-sdk)
 [![PyPI](https://img.shields.io/pypi/v/bookroom-sdk?logo=pypi&color=blue&label=PyPI)](https://pypi.org/project/bookroom-sdk/)
+[![Live demo](https://img.shields.io/badge/live%20demo-bookroom--summarizer.vercel.app-0052ff?logo=vercel&logoColor=white)](https://bookroom-summarizer.vercel.app/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![Node](https://img.shields.io/badge/node-18%2B-green?logo=node.js&logoColor=white)](https://nodejs.org/)
@@ -16,6 +17,13 @@
 [![Security](https://img.shields.io/badge/security-policy-informational)](SECURITY.md)
 
 `EPUB` `PDF` `Markdown` `study guide` `summarization` `LLM` `JEv review` `concept map` `RAG`
+
+### [Try it live →](https://bookroom-summarizer.vercel.app/)
+
+Upload a book and see the whole pipeline in a browser before you write a line of
+code. That deployment is the same engine this SDK wraps — use it to find out
+whether the output is what you want, then install the SDK to get it into your
+own codebase.
 
 </div>
 

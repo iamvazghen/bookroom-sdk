@@ -21,11 +21,37 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE / "python"))
 sys.path.insert(0, str(HERE / "tools"))
+sys.path.insert(0, str(HERE / "tests"))
 
 from bookroom_sdk import Bookroom              # noqa: E402
 from bookroom_sdk.server import create_server  # noqa: E402
+from fixtures import build_epub               # noqa: E402
 
-DEFAULT_BOOK = r"C:\Users\iamva\Downloads\_OceanofPDF.com_God_Sees_the_Truth_but_Waits_-_Leo_Tolstoy.pdf"
+
+def resolve_book(argument: str | None, workdir: Path) -> Path:
+    """Use the book the caller named, or generate a real one to work with.
+
+    A hardcoded path into one developer's Downloads folder makes the suite
+    unrunnable on CI and for every other contributor, so the fallback builds a
+    genuine EPUB rather than failing.
+    """
+    if argument:
+        path = Path(argument).expanduser()
+        if not path.is_file():
+            print(f"no such book: {path}")
+            raise SystemExit(2)
+        return path
+    if DEFAULT_BOOK.is_file():
+        return DEFAULT_BOOK
+    generated = build_epub(workdir / "fixture" / "attention.epub")
+    print("no book given and none found locally; generated a real EPUB fixture")
+    return generated
+
+
+# A local convenience only. Never required: the suite generates its own book.
+DEFAULT_BOOK = Path(
+    r"C:\Users\iamva\Downloads\_OceanofPDF.com_God_Sees_the_Truth_but_Waits_-_Leo_Tolstoy.pdf"
+)
 
 
 def find_dist_entry() -> Path | None:
@@ -51,12 +77,8 @@ def main() -> int:
         print("node is not on PATH")
         return 2
 
-    book = Path(sys.argv[1]).expanduser() if len(sys.argv) > 1 else Path(DEFAULT_BOOK)
-    if not book.is_file():
-        print(f"no such book: {book}")
-        return 2
-
     workdir = Path(tempfile.mkdtemp(prefix="bookroom-cross-"))
+    book = resolve_book(sys.argv[1] if len(sys.argv) > 1 else None, workdir)
     token = "cross-language-token"
     print(f"typescript entry: {dist}")
     print(f"book            : {book}")

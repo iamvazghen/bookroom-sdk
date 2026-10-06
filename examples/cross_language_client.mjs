@@ -127,8 +127,9 @@ check("manifest records review state", manifest.jev_evaluation_enabled === true)
 check("manifest holds no secrets",
   !JSON.stringify(manifest).includes("mock-llm-key") &&
   !JSON.stringify(manifest).includes("mock-jev-key"));
-const usage = await room.export.usage();
-check("usage reported", Number(usage.calls) > 0, `${usage.calls} calls, ${usage.total_tokens} tokens`);
+const usage = await room.export.usage(report.report_path);
+check("usage reported", Number(usage.gemini?.calls) > 0,
+  `${usage.gemini?.calls} calls, ${usage.gemini?.total_tokens} tokens`);
 const artifacts = await room.export.artifacts(report.report_path);
 check("artifact listing", artifacts.length > 0, `${artifacts.length} artifacts`);
 

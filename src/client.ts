@@ -148,9 +148,15 @@ export class Bookroom {
     return this.health.ocrLanguages(options);
   }
 
-  /** `GET /v1/usage` */
-  usage(options?: CallOptions): Promise<ProviderUsage> {
-    return this.export.usage(options);
+  /**
+   * `GET /v1/usage`
+   *
+   * Pass a `reportPath` for the usage recorded by that run. Without one the
+   * server returns a live, thread-local counter, which reads zero when the run
+   * happened on a different thread.
+   */
+  usage(reportPath?: string, options?: CallOptions): Promise<ProviderUsage> {
+    return this.export.usage(reportPath, options);
   }
 
   /**

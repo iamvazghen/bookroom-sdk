@@ -21,7 +21,29 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 PY_DIR = HERE / "python"
-DEFAULT_BOOK = r"C:\Users\iamva\Downloads\_OceanofPDF.com_God_Sees_the_Truth_but_Waits_-_Leo_Tolstoy.pdf"
+sys.path.insert(0, str(HERE / "tests"))
+
+from fixtures import build_epub  # noqa: E402
+
+# A local convenience only. Never required: the suite generates its own book so
+# it runs on CI and on any contributor's machine.
+DEFAULT_BOOK = Path(
+    r"C:\Users\iamva\Downloads\_OceanofPDF.com_God_Sees_the_Truth_but_Waits_-_Leo_Tolstoy.pdf"
+)
+
+
+def resolve_book(argument: str | None, workdir: Path) -> Path:
+    if argument:
+        path = Path(argument).expanduser()
+        if not path.is_file():
+            print(f"no such book: {path}")
+            raise SystemExit(2)
+        return path
+    if DEFAULT_BOOK.is_file():
+        return DEFAULT_BOOK
+    generated = build_epub(workdir / "fixture" / "attention.epub")
+    print("no book given and none found locally; generated a real EPUB fixture")
+    return generated
 
 PASSED: list[str] = []
 FAILED: list[str] = []
@@ -50,12 +72,8 @@ def _clean_env(**extra: str) -> dict[str, str]:
 
 
 def main() -> int:
-    book = Path(sys.argv[1]).expanduser() if len(sys.argv) > 1 else Path(DEFAULT_BOOK)
-    if not book.is_file():
-        print(f"no such book: {book}")
-        return 2
-
     workdir = Path(tempfile.mkdtemp(prefix="bookroom-clean-"))
+    book = resolve_book(sys.argv[1] if len(sys.argv) > 1 else None, workdir)
     venv_dir = workdir / "venv"
     print(f"workdir: {workdir}")
     print(f"book   : {book}")

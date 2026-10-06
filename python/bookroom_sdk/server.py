@@ -225,8 +225,9 @@ def _handler_for(room: Bookroom, registry: JobRegistry, token: str | None) -> ty
                     self._send({"languages": room.extract.ocr_languages()})
                     return
                 if path == f"{API_PREFIX}/usage":
+                    report = (query.get("report_path") or [""])[0]
                     with RUN_LOCK:
-                        self._send(room.export.usage())
+                        self._send(room.export.usage(report or None))
                     return
                 if path == f"{API_PREFIX}/artifacts":
                     report = (query.get("report_path") or [""])[0]

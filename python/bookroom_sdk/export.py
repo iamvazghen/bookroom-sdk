@@ -71,13 +71,43 @@ class ExportAPI:
 
     @guard
     def validate(self, markdown: str | os.PathLike[str]) -> list[str]:
-        """Run the application's deterministic layout checks; [] means valid."""
+        """Run the application's deterministic layout checks; [] means valid.
+
+        Accepts either Markdown *content* or a path to a ``.md`` file. The two are
+        told apart safely: a string is only treated as a path when it is short,
+        has no line break, and actually exists. Probing ``is_file()`` on an
+        arbitrary string is not safe - on Linux it raises ``OSError: File name
+        too long`` for anything over PATH_MAX, which is why a 6 KB report
+        validated locally on Windows and crashed on CI.
+        """
         report_format = bootstrap.module("report_format", self.config)
-        if isinstance(markdown, (str, os.PathLike)):
-            path = Path(markdown).expanduser().resolve()
-            text = path.read_text(encoding="utf-8") if path.is_file() else str(markdown)
-        else:  # pragma: no cover - defensive
-            text = str(markdown)
+        text = self._read_markdown(markdown)
+        return list(report_format.validate_report(text))
+
+    @staticmethod
+    def _read_markdown(markdown: str | os.PathLike[str]) -> str:
+        if isinstance(markdown, os.PathLike):
+            path = Path(markdown).expanduser()
+            if not path.is_file():
+                raise errors.ValidationError(f"No Markdown file at {path}")
+            return path.read_text(encoding="utf-8")
+        value = str(markdown)
+        # Only a plausible, existing, single-line path is read from disk.
+        if "\n" not in value and "\r" not in value and len(value) < 4096:
+            try:
+                path = Path(value).expanduser()
+                if path.is_file():
+                    return path.read_text(encoding="utf-8")
+            except (OSError, ValueError):
+                # Not a usable path, and that is fine: it is report content.
+                pass
+        return value
+
+    @guard
+    def validate_file(self, report_path: str | os.PathLike[str]) -> list[str]:
+        """Validate a report file. Unambiguous, and refuses a missing file."""
+        text = self._read_markdown(Path(report_path))
+        report_format = bootstrap.module("report_format", self.config)
         return list(report_format.validate_report(text))
 
     @guard
@@ -146,8 +176,27 @@ class ExportAPI:
             return {}
 
     @guard
-    def usage(self) -> dict[str, Any]:
-        """Current in-process provider usage for this thread's run."""
+    def usage(self, report_path: str | os.PathLike[str] | None = None) -> dict[str, Any]:
+        """Provider usage for a run.
+
+        With ``report_path``, reads the ``usage.json`` the run wrote. Without
+        it, returns the live in-process counter.
+
+        The live counter is **thread-local**: the engine accumulates it on the
+        thread that made the calls. Over HTTP the request that asks for usage is
+        a different thread, so it legitimately reads zero. When you want a
+        number that belongs to a specific run, pass its report path.
+        """
+        if report_path is not None:
+            source = Path(report_path).expanduser()
+            target = source if source.suffix == ".json" else source.with_name("usage.json")
+            if not target.is_file():
+                raise errors.ValidationError(f"No usage record at {target}")
+            try:
+                payload = json.loads(target.read_text(encoding="utf-8"))
+            except ValueError as exc:
+                raise errors.ValidationError(f"{target} is not valid JSON") from exc
+            return dict(payload) if isinstance(payload, dict) else {}
         provider = bootstrap.module("gemini_provider", self.config)
         report = provider.create_usage_report()
         return dict(report) if isinstance(report, dict) else {}

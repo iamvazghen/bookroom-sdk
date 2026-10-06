@@ -180,10 +180,24 @@ export class ExportApi {
     return body.path;
   }
 
-  /** `GET /v1/usage` — token accounting for the server's current run. */
-  async usage(options?: CallOptions): Promise<ProviderUsage> {
+  /**
+   * `GET /v1/usage` — token accounting.
+   *
+   * Pass `reportPath` to get the usage recorded for a specific run. Without it
+   * the server returns its live in-process counter, which is **thread-local**:
+   * a run executed on a background job thread will read as zero here, because
+   * the request arrives on a different thread. For a number that belongs to a
+   * particular run, always pass its report path.
+   */
+  async usage(reportPath?: string, options?: CallOptions): Promise<ProviderUsage> {
     return this.#transport.request<ProviderUsage>(
-      { method: 'GET', path: '/v1/usage' },
+      {
+        method: 'GET',
+        path: '/v1/usage',
+        // `exactOptionalPropertyTypes` forbids present-and-undefined, so the
+        // key is only added when there is a report path to send.
+        ...(reportPath === undefined ? {} : { query: { report_path: reportPath } }),
+      },
       options,
     );
   }
