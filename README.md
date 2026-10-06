@@ -87,10 +87,24 @@ with a separate **facade token** that belongs on your server. The React hook
 
 ## Install
 
+> **Not yet on a registry.** `bookroom-sdk` is not published to PyPI or npm, so
+> `pip install bookroom-sdk` will fail with 404 today. Install from GitHub — the
+> forms below are tested by `verify_stranger_install.py` on every change.
+
 ### Python
 
 ```bash
-pip install bookroom-sdk
+pip install "bookroom-sdk @ git+https://github.com/iamvazghen/bookroom-sdk.git#subdirectory=python"
+```
+
+The `#subdirectory=python` part is required: the Python project lives in
+`python/`, so pip needs to be told where to look. Cloning and installing
+locally works identically:
+
+```bash
+git clone https://github.com/iamvazghen/bookroom-sdk.git
+cd bookroom-sdk
+pip install "./python[all]"
 ```
 
 <details>
@@ -98,27 +112,18 @@ pip install bookroom-sdk
 
 ```bash
 # pipx — install the CLI as an app, isolated from your project
-pipx install bookroom-sdk
+pipx install "bookroom-sdk @ git+https://github.com/iamvazghen/bookroom-sdk.git#subdirectory=python"
 bookroom --version
 
-# uv (fast; also the recommended way to contribute)
-uv pip install bookroom-sdk
-uv tool install bookroom-sdk          # CLI only
-uv add bookroom-sdk                   # into an existing uv project
+# uv
+uv pip install "bookroom-sdk @ git+https://github.com/iamvazghen/bookroom-sdk.git#subdirectory=python"
+uv tool install "bookroom-sdk @ git+https://github.com/iamvazghen/bookroom-sdk.git#subdirectory=python"
 
 # poetry
-poetry add bookroom-sdk
+poetry add "bookroom-sdk @ git+https://github.com/iamvazghen/bookroom-sdk.git#subdirectory=python"
 
 # pipenv
-pipenv install bookroom-sdk
-
-# conda / mamba
-conda install -c conda-forge bookroom-sdk     # after the feedstock exists
-# or, without a conda build:
-pip install bookroom-sdk
-
-# from source, editable, with the optional transport
-pip install -e "./python[all]"
+pipenv install "bookroom-sdk @ git+https://github.com/iamvazghen/bookroom-sdk.git#subdirectory=python"
 ```
 
 </details>
@@ -126,36 +131,22 @@ pip install -e "./python[all]"
 ### TypeScript / JavaScript
 
 ```bash
-npm install bookroom-sdk
+npm install "github:iamvazghen/bookroom-sdk"
 ```
 
 <details>
 <summary>Other Node package managers</summary>
 
 ```bash
-# pnpm
-pnpm add bookroom-sdk
-
-# yarn (classic and berry)
-yarn add bookroom-sdk
-
-# bun
-bun add bookroom-sdk
-
-# Deno
-deno add npm:bookroom-sdk
-#   or in an import map:
-#   { "imports": { "bookroom-sdk": "npm:bookroom-sdk@^2" } }
-
-# npx, one-off
-npx bookroom-sdk --help
-
-# Volta / asdf pin a Node version; then plain npm add works
+pnpm add "github:iamvazghen/bookroom-sdk"
+yarn add "github:iamvazghen/bookroom-sdk"
+bun add "github:iamvazghen/bookroom-sdk"
+deno add "github:iamvazghen/bookroom-sdk"
 ```
 
 > **One registry, many clients.** `pnpm`, `yarn`, `bun` and `deno` all install
 > from the same npm registry. There is nothing separate to register for each of
-> them — they differ in resolver and cache, not in where the package lives.
+> them — they differ in resolver and cache, not in where a package lives.
 
 </details>
 
