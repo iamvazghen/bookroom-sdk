@@ -54,8 +54,8 @@ def main() -> int:
     parser.add_argument("--out", default="output", help="Output directory (default: output)")
     parser.add_argument("--slug", default=None, help="Output folder name (default: from filename)")
     parser.add_argument("--app-root", default=None,
-                        help="Book Summarizer source root (contains book_pipeline.py). "
-                             "Defaults to BOOKROOM_APP_ROOT, then D:\\summarizer\\src.")
+                        help="Engine checkout to use instead of the copy bundled with the "
+                             "SDK. Defaults to BOOKROOM_APP_ROOT, then the bundled engine.")
     parser.add_argument("--no-review", action="store_true", help="Skip JEv review")
     parser.add_argument("--language", default="English")
     parser.add_argument("--length", default="standard", choices=("brief", "standard", "deep"))
@@ -78,13 +78,16 @@ def main() -> int:
         "stages": {},
     }
 
-    # The SDK needs to know where the Book Summarizer engine lives. In a monorepo
-    # checkout it can be discovered; in a standalone project it must be told.
+    # The engine ships inside the SDK, so no app root is needed. --app-root and
+    # BOOKROOM_APP_ROOT exist only to develop against a live checkout.
     import os
 
-    app_root = args.app_root or os.environ.get("BOOKROOM_APP_ROOT") or r"D:\summarizer\src"
+    overrides: dict = {"output_dir": out_dir}
+    app_root = args.app_root or os.environ.get("BOOKROOM_APP_ROOT")
+    if app_root:
+        overrides["app_root"] = Path(app_root)
     try:
-        room = Bookroom.from_env(output_dir=out_dir, app_root=Path(app_root))
+        room = Bookroom.from_env(**overrides)
     except errors.ConfigError as exc:
         _emit(f"error: {exc}")
         return 2

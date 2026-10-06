@@ -55,12 +55,14 @@ def main() -> int:
         directory.mkdir(parents=True, exist_ok=True)
 
     with MockProviders() as mock:
+        # No engine path is passed: both runs must work against the copy bundled
+        # inside the SDK, which is what a fresh install gets.
         env = {
             "BOOKROOM_LLM_BASE_URL": mock.llm_base_url,
             "BOOKROOM_JEV_BASE_URL": mock.jev_base_url,
-            "BOOKROOM_APP_ROOT": r"D:\summarizer\src",
             "PYTHONIOENCODING": "utf-8",
         }
+        env.pop("BOOKROOM_APP_ROOT", None)
         print(f"mock LLM    : {mock.llm_base_url}")
         print(f"mock review : {mock.jev_base_url}")
         print(f"real source : {source}\n")
@@ -69,8 +71,8 @@ def main() -> int:
         print("RUN 1/2  through the SDK")
         print("=" * 70)
         code, out = _run("run_summary.py",
-                         [str(source), "--out", str(sdk_dir), "--slug", "book",
-                          "--app-root", r"D:\summarizer\src"], env, HERE)
+                         [str(source), "--out", str(sdk_dir), "--slug", "book"],
+                         env, HERE)
         print(out[-3000:])
         if code != 0:
             print(f"\nSDK run failed ({code})")

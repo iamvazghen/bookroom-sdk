@@ -1,6 +1,6 @@
 {
   "name": "bookroom-sdk",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "SDK for the Bookroom book summarizer: EPUB/PDF extraction, complete study guides, independent JEv review, and Markdown/PDF/JSON exports. Python, TypeScript, JavaScript, React and Next.js.",
   "keywords": [
     "bookroom",

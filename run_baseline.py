@@ -27,7 +27,27 @@ import time
 from pathlib import Path
 from typing import Any
 
-APP_ROOT = Path(os.environ.get("BOOKROOM_APP_ROOT") or r"D:\summarizer\src").resolve()
+def _default_engine_root() -> Path:
+    """The engine copy bundled with the SDK, unless one is named explicitly.
+
+    This runner deliberately bypasses the SDK, but the engine itself still
+    ships inside the package, so no external checkout is required.
+    """
+    override = os.environ.get("BOOKROOM_APP_ROOT")
+    if override:
+        return Path(override).expanduser().resolve()
+    try:
+        from bookroom_sdk.config import BUNDLED_ENGINE_DIR
+        if (BUNDLED_ENGINE_DIR / "book_pipeline.py").is_file():
+            return BUNDLED_ENGINE_DIR.resolve()
+    except Exception:  # noqa: BLE001 - fall through to the clear error below
+        pass
+    return BUNDLED_ENGINE_DIR_FALLBACK
+
+
+BUNDLED_ENGINE_DIR_FALLBACK = Path(__file__).resolve().parent / "python" / "bookroom_sdk" / "_engine"
+
+APP_ROOT = _default_engine_root()
 
 
 def _emit(message: str) -> None:
@@ -56,10 +76,14 @@ def main() -> int:
         _emit(f"error: no such file: {source}")
         return 2
     if not (APP_ROOT / "book_pipeline.py").is_file():
-        _emit(f"error: application root not found: {APP_ROOT}")
+        _emit(f"error: engine root not found: {APP_ROOT}")
         return 2
 
-    # The application reads its own .env at import time; give it the same one the
+    # Make the bundled engine discoverable even when the SDK is not installed,
+    # so `python run_baseline.py` works straight from a checkout.
+    sys.path.insert(0, str(Path(__file__).resolve().parent / "python"))
+
+    # The engine reads its own .env at import time; give it the same one the
     # SDK project uses so both runs are configured identically.
     os.environ.setdefault("BOOKROOM_APP_ROOT", str(APP_ROOT))
     sys.path.insert(0, str(APP_ROOT))

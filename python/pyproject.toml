@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bookroom-sdk"
-version = "1.0.0"
-description = "Every Book Summarizer capability - extraction, study guides, JEv review, and PDF/Markdown/JSON exports - callable from your own Python code."
+version = "2.0.0"
+description = "Self-contained SDK for the Bookroom book summarizer: EPUB/PDF extraction, complete study guides, independent JEv review, and Markdown/PDF/JSON exports. The engine ships inside the package."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Proprietary" }
-authors = [{ name = "Book Summarizer" }]
+authors = [{ name = "Bookroom" }]
 keywords = ["summarizer", "study-guide", "pdf", "epub", "llm", "review", "sdk"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -22,34 +22,35 @@ classifiers = [
     "Topic :: Text Processing :: Linguistic",
 ]
 
-# The SDK itself is dependency-light. It drives the wrapped Book Summarizer
-# application, so the application's own runtime dependencies must be installed
-# into the same interpreter (see README, "Install").
+# Everything the bundled engine needs. `pip install bookroom-sdk` is enough:
+# no separate checkout, no PYTHONPATH, no BOOKROOM_APP_ROOT.
 dependencies = [
     "httpx>=0.27",
     "python-dotenv>=1.0",
+    "pymupdf>=1.24",        # PDF text extraction
+    "reportlab>=4.0",       # PDF export
+    "Markdown>=3.5",        # Markdown -> HTML for PDF export
+    "beautifulsoup4>=4.12", # EPUB parsing + PDF HTML shaping
+    "ebooklib>=0.18",       # EPUB parsing
 ]
 
 [project.optional-dependencies]
-pdf = ["pymupdf>=1.24", "reportlab>=4.0", "Markdown>=3.5", "beautifulsoup4>=4.12"]
-epub = ["ebooklib>=0.18", "beautifulsoup4>=4.12"]
-ocr = ["pymupdf>=1.24"]
-all = [
-    "pymupdf>=1.24",
-    "reportlab>=4.0",
-    "Markdown>=3.5",
-    "beautifulsoup4>=4.12",
-    "ebooklib>=0.18",
-]
+# The alternate Ollama/OpenRouter transport (translation, chapter classification).
+legacy = ["ollama>=0.6", "tqdm>=4.66"]
+all = ["ollama>=0.6", "tqdm>=4.66"]
 
 [project.scripts]
 bookroom = "bookroom_sdk.__main__:main"
 
 [project.urls]
-Documentation = "https://example.invalid/bookroom-sdk"
+Homepage = "https://github.com/iamvazghen/bookroom-sdk"
+Repository = "https://github.com/iamvazghen/bookroom-sdk"
 
 [tool.setuptools]
 packages = ["bookroom_sdk"]
 
 [tool.setuptools.package-data]
-bookroom_sdk = ["py.typed"]
+# The engine is data, not a subpackage: it is imported by bare top-level name
+# (the upstream modules do `from book_pipeline import ...`), so the SDK puts
+# this directory on sys.path at load time. It must ship inside the wheel.
+bookroom_sdk = ["_engine/*.py", "_engine/PROVENANCE.md", "py.typed"]

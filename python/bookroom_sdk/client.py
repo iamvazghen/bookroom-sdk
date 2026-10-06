@@ -15,7 +15,21 @@ from .results import Document, HealthReport, Preflight, Report, Review
 from .review import ReviewAPI
 from .summarize import SummarizeAPI
 
-__version__ = "1.0.0"
+def _resolve_version() -> str:
+    """Prefer installed package metadata, fall back to the source constant.
+
+    A hard-coded string silently drifts from pyproject.toml the moment the
+    version is bumped, so read the real one when the package is installed.
+    """
+    try:
+        from importlib.metadata import PackageNotFoundError, version
+        return version("bookroom-sdk")
+    except Exception:  # noqa: BLE001 - not installed, or metadata unavailable
+        return _FALLBACK_VERSION
+
+
+_FALLBACK_VERSION = "2.0.0"
+__version__ = _resolve_version()
 
 
 class Bookroom:

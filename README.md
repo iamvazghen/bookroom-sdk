@@ -27,21 +27,38 @@ There is no UI in this repository. Everything here is code and a CLI.
 
 ## Install
 
+The engine ships **inside** the package. There is no separate checkout, no
+`PYTHONPATH`, and no `BOOKROOM_APP_ROOT`.
+
 ### Python
 
-The Python SDK drives the engine application in-process, so it needs the
-application's dependencies and its path.
+```bash
+pip install bookroom-sdk
+```
 
-```powershell
-$env:PYTHONPATH = "D:\summarizer-sdk\python"
-$env:BOOKROOM_APP_ROOT = "D:\summarizer\src"   # contains book_pipeline.py
+From a checkout:
+
+```bash
+pip install ./python          # or: pip install -e ./python
+```
+
+Optionally add the alternate Ollama/OpenRouter transport:
+
+```bash
+pip install "bookroom-sdk[legacy]"
 ```
 
 ### TypeScript / JavaScript
 
 ```bash
-npm install
-npm run build
+npm install bookroom-sdk
+```
+
+The TS/JS client talks to the Python facade, which is part of the same
+installed package:
+
+```bash
+bookroom serve --host 127.0.0.1 --port 8787 --token "$BOOKROOM_FACADE_TOKEN"
 ```
 
 ## Configuration
@@ -52,11 +69,11 @@ Copy `.env.example` to `.env` and fill it in. Only two values are required:
 |---|---|---|
 | `GEMINI_API_KEY` | yes | Generation. |
 | `TYPESAFE_API_KEY` | for review | JEv review. Omit to run without it. |
-| `BOOKROOM_APP_ROOT` | yes (Python) | Path to the engine source root. |
+| `BOOKROOM_APP_ROOT` | no | Point at an engine checkout instead of the bundled copy. |
 
 A real environment variable always wins over a `.env` value. The SDK reads
 `.env` from the working directory and from the engine root, so the same file
-that configures the application configures the SDK.
+that configures a deployment configures the SDK.
 
 Endpoints are exported and overridable:
 
@@ -197,6 +214,28 @@ TypeScript throws `BookroomError` with `code`/`status` and guards such as
 Read [`SKILL.md`](SKILL.md) before integrating. It states the credential rule,
 the required sequence (check → preflight → run → report honestly), the job
 pattern for long runs, and the failure modes to expect.
+
+## Verification
+
+Every suite runs against the real book, with a local mock provider that speaks
+the actual Gemini and JEv wire formats, so nothing is simulated and no paid key
+is needed.
+
+```bash
+python verify_clean_install.py          #  17 checks: fresh venv, pip install, real book
+python verify_sdk.py                    #  68 checks: extraction -> guide -> review -> exports
+python verify_facade.py                 #  40 checks: every HTTP route
+python verify_examples.py               #  15 checks: the shipped examples and CLI run
+python verify_equivalence.py <book>     #   SDK vs the engine's own code path
+python verify_typescript.py [book]      #  53 checks: compiled TS client vs the live facade
+
+npm run typecheck && npm run build && npm test   # 41 tests
+```
+
+`verify_clean_install.py` is the one that matters most for integrators: it
+builds a throwaway virtual environment, installs the package from source, and
+runs a complete summarization in a subprocess with **no** `BOOKROOM_APP_ROOT`,
+**no** `PYTHONPATH`, and no engine checkout anywhere on the path.
 
 ## Security
 

@@ -40,23 +40,38 @@ environment and fail loudly if absent.
 
 ## Setup
 
-### Python
+The engine ships inside the Python package. Installing the SDK is the whole
+setup — there is no separate checkout, no `PYTHONPATH`, and no
+`BOOKROOM_APP_ROOT`.
 
 ```bash
-export BOOKROOM_APP_ROOT=/path/to/summarizer/src   # engine location
-export GEMINI_API_KEY=...
-export TYPESAFE_API_KEY=...
+pip install bookroom-sdk
 ```
 
-`BOOKROOM_APP_ROOT` points at the directory containing `book_pipeline.py`. The
-SDK drives that application in-process, so it needs the path. A `.env` file in
-the working directory or the engine root is read automatically (a real
-environment variable always wins over a `.env` value).
+```python
+import os
+os.environ["GEMINI_API_KEY"] = "..."      # or read from your own config
+os.environ["TYPESAFE_API_KEY"] = "..."    # optional; without it, review is skipped
+
+from bookroom_sdk import Bookroom
+room = Bookroom.from_env()
+print(room.app_root)      # the bundled engine, inside site-packages
+```
+
+If `from_env()` reports no credentials, that is expected and correct: the SDK
+has no `.env` of its own. Set the variables, or drop a `.env` file beside your
+script — one is read automatically, and a real environment variable always wins
+over the file.
+
+`BOOKROOM_APP_ROOT` exists only to point the SDK at an engine checkout instead
+of the bundled copy, for engine development. You should not need it.
 
 ### TypeScript / JavaScript / React / Next.js
 
+Start the facade, which is part of the same installed package:
+
 ```bash
-python -m bookroom_sdk serve --host 127.0.0.1 --port 8787 --token "$BOOKROOM_FACADE_TOKEN"
+bookroom serve --host 127.0.0.1 --port 8787 --token "$BOOKROOM_FACADE_TOKEN"
 ```
 
 ```ts
@@ -146,13 +161,13 @@ paid work. Catch `QuotaError` (Python) / `isQuotaError` (TS), read
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `ConfigError: Could not locate ...` | engine path unknown | set `BOOKROOM_APP_ROOT` |
 | `ConfigError: llm_api_key is required` | key not loaded | set `GEMINI_API_KEY` |
-| `status not_configured` in `check()` | SDK did not see the `.env` | confirm the file is in the working directory or engine root |
+| `check()` says `not_configured` | SDK has no credentials to read | set the key; a `.env` beside your script is also read |
 | `UnsupportedSourceError` | not a `.pdf`/`.epub` | convert the file |
 | `ExtractionError` | no text found | scanned PDF: enable OCR and install Tesseract |
 | `BudgetExceededError` | over a per-batch cap | raise the cap or split the book |
 | `QuotaError` / HTTP 429 | provider quota | wait `retryAfterSeconds`, re-run to resume |
+| `ModuleNotFoundError: book_pipeline` | the `_engine` directory was stripped from the install | reinstall; do not copy only the `.py` files at the package root |
 | `ValidationError` | report formatting broken | file the bug; do not paper over it |
 | HTTP 401 from the facade | token missing or wrong | `Authorization: Bearer <token>` |
 

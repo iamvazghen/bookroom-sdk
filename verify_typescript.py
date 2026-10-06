@@ -66,7 +66,7 @@ def main() -> int:
         with _MockProviders() as mock:
             room = Bookroom(llm_api_key="mock-llm-key", jev_api_key="mock-jev-key",
                             llm_base_url=mock.llm_base_url, jev_base_url=mock.jev_base_url,
-                            app_root=r"D:\summarizer\src", output_dir=workdir / "output")
+                            output_dir=workdir / "output")
             server = create_server(room, host="127.0.0.1", port=0, token=token)
             port = server.server_address[1]
             base = f"http://127.0.0.1:{port}"

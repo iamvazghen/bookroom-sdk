@@ -40,7 +40,18 @@ def _app_root_candidates() -> tuple[Path, ...]:
     return tuple(candidates)
 
 
-_APP_ROOT_CANDIDATES = _app_root_candidates()
+# The engine ships inside this package. `_engine` is data rather than a
+# subpackage because the engine modules import each other by bare top-level
+# name (`from book_pipeline import ...`), so the loader puts this directory on
+# sys.path. This is what makes a plain `pip install bookroom-sdk` sufficient.
+BUNDLED_ENGINE_DIR = Path(__file__).resolve().parent / "_engine"
+
+# Only used when someone deliberately points the SDK at a live checkout
+# instead of the bundled copy.
+_APP_ROOT_CANDIDATES = (
+    BUNDLED_ENGINE_DIR,
+    *(candidate for candidate in _app_root_candidates()),
+)
 
 ENV_PREFIX = "BOOKROOM_"
 
