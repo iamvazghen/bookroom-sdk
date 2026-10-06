@@ -56,6 +56,11 @@ npm run typecheck && npm test  # 41 tests
 environment and `pip install`s the package. Run it when you change packaging,
 `pyproject.toml`, or the engine bootstrap.
 
+The `npm test` script names its test files explicitly, because
+`node --test "<glob>"` only expands on Node 22+ and fails on Node 18 and 20.
+**If you add a `*.test.js` file, add it to the `test` script in
+`package.json`** or it will not run.
+
 ## What a good change looks like
 
 - **A bug fix comes with a test that fails before it.** Say which check you

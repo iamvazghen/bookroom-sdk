@@ -104,7 +104,7 @@
     "typecheck": "tsc -p tsconfig.json",
     "prepublishOnly": "npm run typecheck && npm run build",
     "pretest": "npm run build",
-    "test": "node --test \"test/**/*.test.js\"",
+    "test": "node --test test/client.test.js test/interop.test.js",
     "facade": "bookroom serve --port 8787",
     "verify:python": "python verify_sdk.py && python verify_facade.py && python verify_examples.py",
     "verify:clean-install": "python verify_clean_install.py",
