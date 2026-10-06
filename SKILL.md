@@ -92,6 +92,13 @@ const health = await room.check();   // TS
 This sends a tiny synthetic request and never sends book content. If
 `health.ok` is false, stop — do not start a paid run against a bad key.
 
+**What `check()` does not tell you.** It verifies that the provider is
+*reachable* and that the key is *accepted*. It does **not** guarantee quota. A
+minimal probe can succeed while the account's quota for the real workload is
+already exhausted, so a green check can still be followed by a `QuotaError`
+mid-run. Treat `check()` as a credential test, and handle `QuotaError` as a
+normal, expected outcome rather than an anomaly.
+
 ## Always preflight before spending
 
 ```python
