@@ -32,7 +32,14 @@ T = TypeVar("T")
 
 _LOCK = threading.RLock
 _locks: dict[str, "threading.RLock"] = {}
+_ENGINE_MODULES = ("book_pipeline", "gemini_provider", "quality_gate",
+                   "resumable_pipeline", "pdf_extractor", "epub_extractor",
+                   "report_format", "map_export", "claim_audit",
+                   "cost_estimation", "report_manifest", "provider_health",
+                   "jev", "epub_extractor", "pdf_export", "merge_markdowns",
+                   "translate", "utils", "prompts")
 _loaded_root: Path | None = None
+_loaded_app_root: str | None = None
 _loaded_fingerprint: str | None = None
 _cache: dict[str, ModuleType] = {}
 
@@ -116,29 +123,47 @@ def _patch_constants(config: Config) -> None:
     extractor.OCR_LANGUAGE = config.ocr_language
 
 
-def load(config: Config, *, force: bool = False) -> Path:
-    """Import (or reuse) the application configured by ``config``.
+def _app_root_of(config: Config) -> str:
+    return str(config.resolved_app_root)
 
-    Returns the application root. Safe to call repeatedly and from threads.
+
+def load(config: Config, *, force: bool = False) -> Path:
+    """Make ``config`` the engine's active configuration.
+
+    Two cases, and the difference matters:
+
+    * a different application root - the module set changes, so the modules are
+      dropped and re-imported;
+    * the same root but a different provider, model, key or review endpoint -
+      the modules are already loaded, so their constants are simply re-patched.
+
+    Without the second case, a second client in the same process would silently
+    keep running against the first client's endpoint, because the engine reads
+    its configuration into module-level constants.
     """
-    global _loaded_root, _loaded_fingerprint
+    global _loaded_root, _loaded_fingerprint, _loaded_app_root
 
     with _lock_for("bookroom.bootstrap"):
         fingerprint = _fingerprint(config)
-        if force or _loaded_root is None or fingerprint != _loaded_fingerprint:
+        app_root = _app_root_of(config)
+        if not force and fingerprint == _loaded_fingerprint and app_root == _loaded_app_root:
+            return _loaded_root  # type: ignore[return-value]
+
+        apply_environment(config)
+        if force or _loaded_root is None or app_root != _loaded_app_root:
             root = ensure_on_path(config)
-            # Forget the previous tree so a reconfigured client re-reads config
-            # from os.environ at import time instead of reusing stale constants.
-            for module_name in ("book_pipeline", "gemini_provider", "quality_gate",
-                                "resumable_pipeline", "pdf_extractor", "epub_extractor"):
+            # The engine reads os.environ at import time, so a different root
+            # means a genuinely different module set: drop and re-import.
+            for module_name in _ENGINE_MODULES:
                 sys.modules.pop(module_name, None)
             _cache.clear()
-            apply_environment(config)
-            _patch_constants(config)
-            _loaded_root = root
-            _loaded_fingerprint = fingerprint
-            return root
-        return _loaded_root
+        else:
+            root = _loaded_root  # type: ignore[assignment]
+        _patch_constants(config)
+        _loaded_root = root
+        _loaded_app_root = app_root
+        _loaded_fingerprint = fingerprint
+        return root  # type: ignore[return-value]
 
 
 def module(name: str, config: Config) -> ModuleType:
@@ -168,8 +193,9 @@ def call(module_name: str, config: Config, function_name: str, *args, **kwargs):
 
 def reset() -> None:
     """Forget the loaded tree (used by tests)."""
-    global _loaded_root, _loaded_fingerprint
+    global _loaded_root, _loaded_fingerprint, _loaded_app_root
     with _lock_for("bookroom.bootstrap"):
         _cache.clear()
         _loaded_root = None
         _loaded_fingerprint = None
+        _loaded_app_root = None

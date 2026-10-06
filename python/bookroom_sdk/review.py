@@ -41,6 +41,52 @@ class ReviewAPI:
 
     # ------------------------------------------------------------ single score
     @guard
+    def models(self) -> list[dict[str, Any]]:
+        """List the System One models this review endpoint will accept.
+
+        Any provider implementing the System One contract can be used, not just
+        TypeSafe: point ``jev_base_url`` at it and this call reports whatever it
+        offers. Returns ``[{"name", "description", "release_date"}, ...]``.
+        """
+        import httpx
+
+        base = (self.config.jev_base_url or "").rstrip("/")
+        if not base:
+            raise errors.ConfigError("No review endpoint configured; set jev_base_url")
+        key = self.config.jev_api_key or self.config.require_jev_key()
+        url = f"{base}/models" if base.endswith("/v1") or "/v1" in base else f"{base}/v1/models"
+        try:
+            with httpx.Client(timeout=30) as client:
+                response = client.get(url, headers={"Authorization": f"Bearer {key}"})
+        except httpx.RequestError as exc:
+            raise errors.ProviderError(
+                f"Could not reach the review endpoint for model discovery ({type(exc).__name__}): {exc}",
+                provider="jev") from None
+        if response.status_code == 401:
+            raise errors.ProviderError("The review endpoint rejected the API key.", provider="jev")
+        if response.status_code >= 400:
+            raise errors.ProviderError(
+                f"Model discovery failed with HTTP {response.status_code}.", provider="jev")
+        try:
+            payload = response.json()
+        except ValueError:
+            raise errors.ProviderError("Model discovery returned invalid JSON.", provider="jev") from None
+        entries = payload.get("models") if isinstance(payload, dict) else payload
+        if not isinstance(entries, list):
+            return []
+        models: list[dict[str, Any]] = []
+        for entry in entries:
+            if isinstance(entry, dict) and entry.get("name"):
+                models.append({
+                    "name": str(entry["name"]),
+                    "description": str(entry.get("description") or ""),
+                    "release_date": str(entry.get("release_date") or ""),
+                })
+            elif isinstance(entry, str):
+                models.append({"name": entry, "description": "", "release_date": ""})
+        return models
+
+    @guard
     def evaluate(self, source_excerpt: str, summary: str) -> dict[str, Any]:
         """Score one summary against a bounded excerpt (faithfulness/coverage/clarity).
 
