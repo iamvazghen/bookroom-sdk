@@ -67,6 +67,17 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: npm
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install the Python SDK
+        # The facade that these clients talk to ships inside the Python package,
+        # so it has to be installed before the client can be exercised against it.
+        run: |
+          python -m pip install --upgrade pip
+          pip install "./python[all]"
+
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build
